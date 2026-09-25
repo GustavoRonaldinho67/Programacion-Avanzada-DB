@@ -196,36 +196,42 @@ GO
 VALUES
 (1, 'Producto Prueba', -100.00, 5);*/
 
--- Actividad 2: Consultas de selección, filtros y agrupación
--- Elaborado por: Mauricio Rojas
+--Consultas de selección, filtros y agrupación
 
--- Requerimiento 1: Identificar productos de las categorías 1 (Tecnología) y 2 (Accesorios)
--- cuyo nombre contenga la letra 'o', estandarizando su presentación y calculando su valor bruto.
-SELECT 
-    UPPER(NombreProducto) AS Producto_Mayuscula, 
-    Precio,
-    Stock,
-    (Precio * Stock) AS ValorTotalInventario, 
-    ROUND(Precio * 1.18, 2) AS PrecioConIGV 
-FROM 
-    Productos
-WHERE 
-    IdCategoria IN (1, 2) 
-    AND NombreProducto LIKE '%o%' 
-    AND Precio BETWEEN 50.00 AND 3000.00; 
+USE TRABAJO_GRUPAL;
 GO
 
--- Requerimiento 2: Calcular el monto total facturado por cada pedido,
--- mostrando únicamente aquellos pedidos que superen los 200.00 en su total acumulado.
+-- mostrar los clientes cuyo nombre comience o contenga la letra 'a'
+-- aplicando un alias para presentar la columna de forma clara.
+
 SELECT 
-    IdPedido,
-    COUNT(IdProducto) AS CantidadItemsDiferentes, 
-    SUM(Cantidad * PrecioUnitario) AS MontoTotalFacturado 
-FROM 
-    DetallePedido
-GROUP BY 
-    IdPedido 
-HAVING 
-    SUM(Cantidad * PrecioUnitario) > 200.00; 
+    IdCliente,
+    Nombre AS cliente,
+    Correo,
+    Estado
+FROM Clientes
+WHERE Nombre LIKE '%a%';
 GO
 
+
+-- mostrar por categoría el promedio de precios y la suma del stock valorizado
+-- (Precio * Stock) utilizando funciones de agregación (AVG, SUM) y GROUP BY.
+
+SELECT 
+    IdCategoria,
+    AVG(Precio) AS precio_promedio,
+    SUM(Precio * Stock) AS stock_valorizado
+FROM Productos
+GROUP BY IdCategoria;
+GO
+
+-- contar la cantidad de pedidos por cliente y mostrar solo a aquellos
+-- clientes que tengan más de 0 pedidos registrados usando HAVING.
+
+SELECT 
+    IdCliente,
+    COUNT(IdPedido) AS nro_pedidos
+FROM Pedidos
+GROUP BY IdCliente
+HAVING COUNT(IdPedido) > 0;
+GO
