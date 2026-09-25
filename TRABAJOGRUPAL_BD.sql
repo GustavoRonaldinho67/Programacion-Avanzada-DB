@@ -195,3 +195,43 @@ GO
 (IdCategoria, NombreProducto, Precio, Stock)
 VALUES
 (1, 'Producto Prueba', -100.00, 5);*/
+
+--Consultas de selección, filtros y agrupación
+
+USE TRABAJO_GRUPAL;
+GO
+
+-- mostrar los clientes cuyo nombre comience o contenga la letra 'a'
+-- aplicando un alias para presentar la columna de forma clara.
+
+SELECT 
+    IdCliente,
+    Nombre AS cliente,
+    Correo,
+    Estado
+FROM Clientes
+WHERE Nombre LIKE '%a%';
+GO
+
+
+-- mostrar por categoría el promedio de precios y la suma del stock valorizado
+-- (Precio * Stock) utilizando funciones de agregación (AVG, SUM) y GROUP BY.
+
+SELECT 
+    IdCategoria,
+    AVG(Precio) AS precio_promedio,
+    SUM(Precio * Stock) AS stock_valorizado
+FROM Productos
+GROUP BY IdCategoria;
+GO
+
+-- contar la cantidad de pedidos por cliente y mostrar solo a aquellos
+-- clientes que tengan más de 0 pedidos registrados usando HAVING.
+
+SELECT 
+    IdCliente,
+    COUNT(IdPedido) AS nro_pedidos
+FROM Pedidos
+GROUP BY IdCliente
+HAVING COUNT(IdPedido) > 0;
+GO
