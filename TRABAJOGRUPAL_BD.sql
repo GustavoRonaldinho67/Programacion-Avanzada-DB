@@ -195,3 +195,37 @@ GO
 (IdCategoria, NombreProducto, Precio, Stock)
 VALUES
 (1, 'Producto Prueba', -100.00, 5);*/
+
+-- Actividad 2: Consultas de selección, filtros y agrupación
+-- Elaborado por: Mauricio Rojas
+
+-- Requerimiento 1: Identificar productos de las categorías 1 (Tecnología) y 2 (Accesorios)
+-- cuyo nombre contenga la letra 'o', estandarizando su presentación y calculando su valor bruto.
+SELECT 
+    UPPER(NombreProducto) AS Producto_Mayuscula, 
+    Precio,
+    Stock,
+    (Precio * Stock) AS ValorTotalInventario, 
+    ROUND(Precio * 1.18, 2) AS PrecioConIGV 
+FROM 
+    Productos
+WHERE 
+    IdCategoria IN (1, 2) 
+    AND NombreProducto LIKE '%o%' 
+    AND Precio BETWEEN 50.00 AND 3000.00; 
+GO
+
+-- Requerimiento 2: Calcular el monto total facturado por cada pedido,
+-- mostrando únicamente aquellos pedidos que superen los 200.00 en su total acumulado.
+SELECT 
+    IdPedido,
+    COUNT(IdProducto) AS CantidadItemsDiferentes, 
+    SUM(Cantidad * PrecioUnitario) AS MontoTotalFacturado 
+FROM 
+    DetallePedido
+GROUP BY 
+    IdPedido 
+HAVING 
+    SUM(Cantidad * PrecioUnitario) > 200.00; 
+GO
+
