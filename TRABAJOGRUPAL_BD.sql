@@ -190,12 +190,8 @@ GO
 
 
 -- prueba de restriccion
--- dejala comentada normalmente
--- para el video quita /* y */ y ejecuta solo este INSERT
 
-/*
-INSERT INTO Productos
+/*INSERT INTO Productos
 (IdCategoria, NombreProducto, Precio, Stock)
 VALUES
-(1, 'Producto Prueba', -100.00, 5);
-*/
+(1, 'Producto Prueba', -100.00, 5);*/
