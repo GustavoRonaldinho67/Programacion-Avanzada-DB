@@ -4,6 +4,8 @@
 
 **Curso:** Programación Avanzada de Base de Datos (30627)
 
+**Enlace al Repositorio en GitHub:** [GitHUB GRUPO 3](https://github.com/GustavoRonaldinho67/Programacion-Avanzada-DB)
+
 ## Objetivo
 
 El objetivo de este proyecto es diseñar, desarrollar e implementar un modelo físico coherente en Microsoft SQL Server que permita administrar los datos de una organización (clientes, productos y pedidos). Además, se busca evidenciar la capacidad técnica para obtener información útil mediante el uso de consultas simples, agrupadas, multitabla y subconsultas justificadas, aplicando buenas prácticas y cumpliendo con las restricciones de integridad.
