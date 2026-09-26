@@ -4,9 +4,25 @@ GO
 USE TRABAJO_GRUPAL;
 GO
 
--- Actividad 1
--- Creacion de tablas y restricciones
+-- =========================================================================
+-- Actividad 1: Creacion de tablas y restricciones
+-- =========================================================================
+-- Elaborado por: Gustavo Muñoz
 
+-- =========================================================================
+-- INICIO DEL BLOQUE DE LIMPIEZA PREVENTIVA
+-- =========================================================================
+-- Esto elimina las tablas si ya existen, evitando errores al ejecutar el script múltiples veces.
+-- El orden de eliminación es inverso al de creación (por las dependencias de llaves foráneas).
+IF OBJECT_ID('DetallePedido', 'U') IS NOT NULL DROP TABLE DetallePedido;
+IF OBJECT_ID('Pedidos', 'U') IS NOT NULL DROP TABLE Pedidos;
+IF OBJECT_ID('Productos', 'U') IS NOT NULL DROP TABLE Productos;
+IF OBJECT_ID('Categorias', 'U') IS NOT NULL DROP TABLE Categorias;
+IF OBJECT_ID('Clientes', 'U') IS NOT NULL DROP TABLE Clientes;
+GO
+-- =========================================================================
+-- FIN DEL BLOQUE DE LIMPIEZA PREVENTIVA
+-- =========================================================================
 
 -- tabla clientes
 CREATE TABLE Clientes
@@ -196,42 +212,116 @@ GO
 VALUES
 (1, 'Producto Prueba', -100.00, 5);*/
 
---Consultas de selección, filtros y agrupación
+-- =========================================================================
+-- Actividad 2: Consultas de selección, filtros y agrupación
+-- =========================================================================
+-- Elaborado por: Leandro Henostroza (Optimizado por Mauricio Rojas)
 
-USE TRABAJO_GRUPAL;
+-- Requerimiento 1: Identificar productos de las categorías 1 (Tecnología) y 2 (Accesorios)
+-- cuyo nombre contenga la letra 'o', estandarizando su presentación y calculando su valor bruto.
+SELECT 
+    UPPER(NombreProducto) AS Producto_Mayuscula, 
+    Precio,
+    Stock,
+    (Precio * Stock) AS ValorTotalInventario, 
+    ROUND(Precio * 1.18, 2) AS PrecioConIGV 
+FROM 
+    Productos
+WHERE 
+    IdCategoria IN (1, 2) 
+    AND NombreProducto LIKE '%o%' 
+    AND Precio BETWEEN 50.00 AND 3000.00; 
 GO
 
--- mostrar los clientes cuyo nombre comience o contenga la letra 'a'
--- aplicando un alias para presentar la columna de forma clara.
-
+-- Requerimiento 2: Calcular el monto total facturado por cada pedido,
+-- mostrando únicamente aquellos pedidos que superen los 200.00 en su total acumulado.
 SELECT 
-    IdCliente,
-    Nombre AS cliente,
-    Correo,
-    Estado
-FROM Clientes
-WHERE Nombre LIKE '%a%';
+    IdPedido,
+    COUNT(IdProducto) AS CantidadItemsDiferentes, 
+    SUM(Cantidad * PrecioUnitario) AS MontoTotalFacturado 
+FROM 
+    DetallePedido
+GROUP BY 
+    IdPedido 
+HAVING 
+    SUM(Cantidad * PrecioUnitario) > 200.00; 
 GO
 
+-- =========================================================================
+-- Actividad 3: Consultas multitabla y consolidación de resultados
+-- =========================================================================
+-- Elaborado por: Mauricio Rojas
 
--- mostrar por categoría el promedio de precios y la suma del stock valorizado
--- (Precio * Stock) utilizando funciones de agregación (AVG, SUM) y GROUP BY.
-
+-- Requerimiento 3.1: Clasificar el valor comercial de todos los clientes, 
+-- incluyendo aquellos que aún no tienen transacciones registradas.
+-- Implementación técnica: LEFT OUTER JOIN, INNER JOIN y CASE.
 SELECT 
-    IdCategoria,
-    AVG(Precio) AS precio_promedio,
-    SUM(Precio * Stock) AS stock_valorizado
-FROM Productos
-GROUP BY IdCategoria;
+    C.DNI,
+    C.Nombre,
+    ISNULL(SUM(DP.Cantidad * DP.PrecioUnitario), 0) AS TotalFacturado,
+    CASE 
+        WHEN SUM(DP.Cantidad * DP.PrecioUnitario) >= 2000 THEN 'Cliente VIP'
+        WHEN SUM(DP.Cantidad * DP.PrecioUnitario) > 0 AND SUM(DP.Cantidad * DP.PrecioUnitario) < 2000 THEN 'Cliente Regular'
+        ELSE 'Prospecto (Sin Compras)'
+    END AS CategoriaComercial
+FROM 
+    Clientes C
+LEFT OUTER JOIN Pedidos P ON C.IdCliente = P.IdCliente
+LEFT OUTER JOIN DetallePedido DP ON P.IdPedido = DP.IdPedido
+GROUP BY 
+    C.DNI, C.Nombre;
 GO
 
--- contar la cantidad de pedidos por cliente y mostrar solo a aquellos
--- clientes que tengan más de 0 pedidos registrados usando HAVING.
-
+-- Requerimiento 3.2: Consolidar un reporte operativo del estado del inventario.
+-- Implementación técnica: UNION para unificar dos conjuntos de datos independientes.
 SELECT 
-    IdCliente,
-    COUNT(IdPedido) AS nro_pedidos
-FROM Pedidos
-GROUP BY IdCliente
-HAVING COUNT(IdPedido) > 0;
+    NombreProducto, 
+    Stock, 
+    'Inventario Crítico (Requiere Reposición)' AS EstadoStock
+FROM 
+    Productos 
+WHERE 
+    Stock < 15
+UNION
+SELECT 
+    NombreProducto, 
+    Stock, 
+    'Inventario Óptimo' AS EstadoStock
+FROM 
+    Productos 
+WHERE 
+    Stock >= 15;
+GO
+
+-- =========================================================================
+-- Actividad 4: Subconsultas y contraste de alternativas
+-- =========================================================================
+-- Elaborado por: Mauricio Rojas
+
+-- Requerimiento 4.1: Identificar productos cuyo precio está por encima de la media del mercado.
+-- Implementación técnica: Subconsulta en la cláusula WHERE.
+SELECT 
+    NombreProducto, 
+    Precio,
+    (SELECT AVG(Precio) FROM Productos) AS PrecioPromedioGlobal
+FROM 
+    Productos 
+WHERE 
+    Precio > (SELECT AVG(Precio) FROM Productos);
+GO
+
+-- Requerimiento 4.2: Aislar clientes que representan un riesgo financiero (pedidos pendientes).
+-- Implementación técnica: Cláusula EXISTS (optimización de rendimiento frente a IN o JOIN).
+SELECT 
+    C.Nombre, 
+    C.Correo,
+    C.Telefono
+FROM 
+    Clientes C
+WHERE EXISTS (
+    SELECT 1 
+    FROM Pedidos P 
+    WHERE P.IdCliente = C.IdCliente 
+    AND P.Estado = 'Pendiente'
+);
 GO
